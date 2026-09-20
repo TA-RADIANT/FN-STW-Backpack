@@ -100,7 +100,7 @@ const TRAP_RECIPES = [
     },
     {
         id: "flame_grill_floor_freeze",
-        name: "Flame Grill Floor Trap / Floor Freeze Trap",
+        name: "Floor Freeze Trap / Flame Grill Floor Trap",
         category: "Floor",
         defaultWeight: 5.0,
         ingredients: {

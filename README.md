@@ -73,7 +73,7 @@ $$\text{Minimize} \quad \sum_{k} s_{\text{trap}, k} + \sum_{m} s_{\text{mat}, m}
 | 5 | **Ceiling Gas Trap** | Ceiling | Nuts 'n' Bolts, Fibrous Herbs, Bacon, Mineral Powder |
 | 6 | **Ceiling Zapper** | Ceiling | Nuts 'n' Bolts, Batteries, Mechanical Parts |
 | 7 | **Cozy Campfire** | Floor | Planks, Flower Petals, Twine |
-| 8 | **Flame Grill / Floor Freeze Trap** | Floor | Rough Ore, Quartz Crystal, Mineral Powder |
+| 8 | **Floor Freeze Trap / Flame Grill Floor Trap** | Floor | Rough Ore, Quartz Crystal, Mineral Powder |
 | 9 | **Floor Launcher / Wall Launcher** | Floor / Wall | Rough Ore, Planks, Mineral Powder |
 | 10 | **Healing Pad** | Floor | Flower Petals, Fibrous Herbs, Bacon |
 | 11 | **Retractable Floor Spikes** | Floor | Nuts 'n' Bolts, Rough Ore, Mechanical Parts |
