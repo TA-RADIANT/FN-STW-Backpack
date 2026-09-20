@@ -35,13 +35,18 @@ body {
 /* App Header */
 header.app-header {
     background-color: var(--header-bg);
-    border-bottom: 1px solid var(--border-color);
-    padding: 12px 24px;
+    border: 1px solid var(--border-color);
+    border-top: none;
+    border-radius: 0 0 10px 10px;
+    padding: 10px 24px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
     gap: 12px;
+    max-width: 960px;
+    margin: 0 auto 4px auto;
+    width: 95%;
 }
 
 .header-left h1 {
@@ -229,9 +234,8 @@ input[type=number] {
 
 /* Materials Table / List */
 .materials-list-container {
-    flex: 1;
-    overflow-y: auto;
-    max-height: 560px;
+    flex: 0 0 auto;
+    overflow-y: visible;
     padding-right: 4px;
 }
 
@@ -535,7 +539,7 @@ input[type=number] {
 
 /* Material Panel Footer Stats */
 .stats-box {
-    margin-top: 12px;
+    margin-top: 8px;
     border-top: 1px solid var(--border-color);
     border-bottom: 1px solid var(--border-color);
     padding: 8px 4px;
@@ -562,7 +566,7 @@ input[type=number] {
 .panel-actions {
     display: flex;
     gap: 8px;
-    margin-top: 12px;
+    margin-top: 10px;
 }
 
 .panel-actions button {
@@ -573,21 +577,21 @@ input[type=number] {
 .traps-list-container {
     flex: 1;
     overflow-y: auto;
-    max-height: 560px;
+    max-height: 820px;
     padding-right: 6px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
 }
 
 .trap-card {
     background: #090d16;
     border: 1px solid var(--border-color);
     border-radius: 6px;
-    padding: 8px 12px;
+    padding: 6px 10px;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 4px;
 }
 
 .trap-card:hover {

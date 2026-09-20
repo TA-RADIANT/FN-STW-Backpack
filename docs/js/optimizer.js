@@ -92,14 +92,7 @@ class InventoryOptimizer {
         let result = null;
 
         if (mode === 'exact_wasm') {
-            try {
-                result = await this.solveWasmMILP(initialMap, inputWeights, beforeSlots);
-            } catch (err) {
-                console.warn("WASM MILP solver unavailable, falling back to Clean Stacks mode:", err);
-                result = this.solveCleanStacks(initialMap, inputWeights, beforeSlots);
-                result.modeFallback = true;
-                result.fallbackReason = err.message || "WASM module could not be loaded";
-            }
+            result = await this.solveWasmMILP(initialMap, inputWeights, beforeSlots);
         } else {
             result = this.solveCleanStacks(initialMap, inputWeights, beforeSlots);
         }
@@ -121,11 +114,31 @@ class InventoryOptimizer {
     async solveWasmMILP(initialMap, inputWeights, beforeSlots) {
         const highs = await this.initWasm();
 
+        // Calculate max craftable per trap based on available materials (exact parity with Java)
+        const maxCraftable = {};
+        const maxTrapSlots = {};
+        for (const trap of this.recipes) {
+            let maxC = Infinity;
+            let requiresMat = false;
+            for (const [matName, cost] of Object.entries(trap.ingredients)) {
+                if (cost > 0) {
+                    requiresMat = true;
+                    const available = initialMap[matName] || 0;
+                    maxC = Math.min(maxC, Math.floor(available / cost));
+                }
+            }
+            if (!requiresMat || maxC === Infinity) {
+                maxC = 0;
+            }
+            maxCraftable[trap.id] = maxC;
+            maxTrapSlots[trap.id] = Math.ceil(maxC / 200);
+        }
+
         // Build CPLEX LP model matching Java's InventoryOptimizerService:
         // Variables:
-        // x_{trap.id}: integer count of traps to craft
-        // s_trap_{trap.id}: integer trap slots (200 traps per slot)
-        // s_mat_{mat.id}: integer leftover material slots (999 items per slot)
+        // x_{trap.id}: integer count of traps to craft [0, maxCraftable]
+        // s_trap_{trap.id}: integer trap slots (200 traps per slot) [0, maxTrapSlots]
+        // s_mat_{mat.id}: integer leftover material slots (999 items per slot) [0, maxMatSlots]
         let lp = "Minimize\n  obj: ";
 
         const objTerms = [];
@@ -148,7 +161,7 @@ class InventoryOptimizer {
             const terms = [];
             for (const trap of this.recipes) {
                 const cost = trap.ingredients[mat.name] || 0;
-                if (cost > 0) {
+                if (cost > 0 && maxCraftable[trap.id] > 0) {
                     terms.push(`${cost} x_${trap.id}`);
                 }
             }
@@ -159,7 +172,9 @@ class InventoryOptimizer {
 
         // 2. Trap slot capacity: x_k - 200 s_trap_k <= 0
         for (const trap of this.recipes) {
-            lp += `  trap_cap_${trap.id}: x_${trap.id} - 200 s_trap_${trap.id} <= 0\n`;
+            if (maxCraftable[trap.id] > 0) {
+                lp += `  trap_cap_${trap.id}: x_${trap.id} - 200 s_trap_${trap.id} <= 0\n`;
+            }
         }
 
         // 3. Leftover material capacity: sum(cost * x_k) + 999 s_mat_m >= initialQty
@@ -168,7 +183,7 @@ class InventoryOptimizer {
             const terms = [];
             for (const trap of this.recipes) {
                 const cost = trap.ingredients[mat.name] || 0;
-                if (cost > 0) {
+                if (cost > 0 && maxCraftable[trap.id] > 0) {
                     terms.push(`${cost} x_${trap.id}`);
                 }
             }
@@ -178,8 +193,10 @@ class InventoryOptimizer {
 
         lp += "Bounds\n";
         for (const trap of this.recipes) {
-            lp += `  0 <= x_${trap.id}\n`;
-            lp += `  0 <= s_trap_${trap.id}\n`;
+            const maxC = maxCraftable[trap.id] || 0;
+            const maxSlots = maxTrapSlots[trap.id] || 0;
+            lp += `  0 <= x_${trap.id} <= ${maxC}\n`;
+            lp += `  0 <= s_trap_${trap.id} <= ${maxSlots}\n`;
         }
         for (const mat of this.materials) {
             const initialQty = initialMap[mat.name] || 0;
@@ -190,17 +207,25 @@ class InventoryOptimizer {
         lp += "Integers\n";
         const intVars = [];
         for (const trap of this.recipes) {
-            intVars.push(`x_${trap.id}`);
-            intVars.push(`s_trap_${trap.id}`);
+            if (maxCraftable[trap.id] > 0) {
+                intVars.push(`x_${trap.id}`);
+                intVars.push(`s_trap_${trap.id}`);
+            }
         }
         for (const mat of this.materials) {
-            intVars.push(`s_mat_${mat.id}`);
+            if ((initialMap[mat.name] || 0) > 0) {
+                intVars.push(`s_mat_${mat.id}`);
+            }
         }
-        lp += "  " + intVars.join(" ") + "\nEnd\n";
+        if (intVars.length > 0) {
+            lp += "  " + intVars.join(" ") + "\n";
+        }
+        lp += "End\n";
 
         const sol = highs.solve(lp);
-        if (sol.Status !== "Optimal" && sol.Status !== "Feasible") {
-            throw new Error("HiGHS did not find an optimal solution: " + sol.Status);
+
+        if (!sol || (sol.Status !== "Optimal" && sol.Status !== "Feasible")) {
+            throw new Error("HiGHS did not find an optimal solution: " + (sol ? sol.Status : "Unknown"));
         }
 
         // Extract craft counts

@@ -57,6 +57,29 @@ document.addEventListener("DOMContentLoaded", () => {
             img.alt = mat.name;
             img.className = "mat-icon";
             img.title = `${mat.name} (Max 999/slot)`;
+            img.onerror = () => {
+                if (!img.dataset.retried) {
+                    img.dataset.retried = "1";
+                    const currentSrc = img.getAttribute("src") || "";
+                    if (currentSrc.startsWith("images/")) {
+                        img.src = "docs/" + currentSrc;
+                        return;
+                    } else if (currentSrc.startsWith("docs/images/")) {
+                        img.src = currentSrc.replace("docs/images/", "images/");
+                        return;
+                    }
+                }
+                img.style.display = "none";
+                if (!tdIcon.querySelector(".mat-fallback-text")) {
+                    const span = document.createElement("span");
+                    span.className = "mat-fallback-text";
+                    span.textContent = mat.name;
+                    span.style.fontSize = "0.72rem";
+                    span.style.fontWeight = "600";
+                    span.style.color = "#cbd5e1";
+                    tdIcon.appendChild(span);
+                }
+            };
             tdIcon.appendChild(img);
 
             // Col 1: Full 999 Stacks Stepper [- Stacks + +5]
@@ -585,11 +608,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         statusText.style.color = "var(--text-muted)";
-        if (result.modeFallback) {
-            statusText.innerHTML = `⚠️ <strong style="color:var(--warning);">WASM Offline Fallback:</strong> Solved with ${result.solverLabel} (${result.executionTimeMs} ms). Reduced slots from ${result.beforeSlots} to ${result.afterSlots} (${result.slotsSaved} saved).`;
-        } else {
-            statusText.innerHTML = `✓ <strong>${result.solverLabel}:</strong> Solved in ${result.executionTimeMs} ms. Reduced slots from ${result.beforeSlots} to ${result.afterSlots} (${result.slotsSaved} saved, ${result.reductionPercent.toFixed(1)}%). Crafted ${result.totalTrapsCrafted.toLocaleString()} traps.`;
-        }
+        statusText.innerHTML = `✓ <strong>${result.solverLabel}:</strong> Solved in ${result.executionTimeMs} ms. Reduced slots from ${result.beforeSlots} to ${result.afterSlots} (${result.slotsSaved} saved, ${result.reductionPercent.toFixed(1)}%). Crafted ${result.totalTrapsCrafted.toLocaleString()} traps.`;
     }
 
     // Tabs switching
