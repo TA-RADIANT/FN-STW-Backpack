@@ -90,7 +90,7 @@ public class RecipeRepository {
         list.add(createRecipe("cozy_campfire", "Cozy Campfire", "Floor", 5.0,
                 Map.of(Material.PLANKS, 9, Material.FLOWER_PETALS, 2, Material.TWINE, 2)));
 
-        list.add(createRecipe("flame_grill_floor_freeze", "Flame Grill Floor Trap / Floor Freeze Trap", "Floor", 5.0,
+        list.add(createRecipe("flame_grill_floor_freeze", "Floor Freeze Trap / Flame Grill Floor Trap", "Floor", 5.0,
                 Map.of(Material.ROUGH_ORE, 7, Material.QUARTZ_CRYSTAL, 2, Material.MINERAL_POWDER, 2)));
 
         list.add(createRecipe("floor_launcher_wall_launcher", "Floor Launcher / Wall Launcher", "Floor / Wall", 5.0,
