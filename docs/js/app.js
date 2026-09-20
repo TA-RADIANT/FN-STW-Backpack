@@ -1,17 +1,16 @@
 /**
  * Fortnite: STW Backpack & Storage Optimizer - Application Logic.
- * Handles DOM rendering, reactive state syncing, localStorage persistence,
- * and user interactions.
+ * Handles DOM rendering, reactive state syncing, and user interactions.
+ * Completely stateless per run for independent execution.
  */
 
 document.addEventListener("DOMContentLoaded", () => {
     const optimizer = new InventoryOptimizer(MATERIALS, TRAP_RECIPES);
 
-    // State
+    // State (Fresh per run)
     const state = {
         materials: {}, // mat.name -> { stacks: 0, remainder: 0 }
-        weights: {},   // trap.id -> number
-        profiles: {},  // profileName -> { mat.name: totalQty }
+        weights: {},   // trap.id -> number (default 5)
         lastResult: null
     };
 
@@ -20,13 +19,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const totalItemsStat = document.getElementById("totalItemsStat");
     const totalSlotsStat = document.getElementById("totalSlotsStat");
     const clearMatsBtn = document.getElementById("clearMatsBtn");
-    const randomMatsBtn = document.getElementById("randomMatsBtn");
-    const materialProfileSelect = document.getElementById("materialProfileSelect");
-    const saveProfileBtn = document.getElementById("saveProfileBtn");
-    const deleteProfileBtn = document.getElementById("deleteProfileBtn");
 
     const trapsListContainer = document.getElementById("trapsListContainer");
-    const trapPresetSelect = document.getElementById("trapPresetSelect");
+    const resetWeightsBtn = document.getElementById("resetWeightsBtn");
 
     const optimizeBtn = document.getElementById("optimizeBtn");
     const statusText = document.getElementById("statusText");
@@ -45,63 +40,316 @@ document.addEventListener("DOMContentLoaded", () => {
     const trapsTableBody = document.getElementById("trapsTableBody");
     const leftoversTableBody = document.getElementById("leftoversTableBody");
 
-    // Initialize Material Rows
+    // Initialize Material Rows with Tactile Stepper Controls
     function renderMaterials() {
         materialsTableBody.innerHTML = "";
 
         MATERIALS.forEach(mat => {
             const tr = document.createElement("tr");
 
-            // Col 0: Name
-            const tdName = document.createElement("td");
-            tdName.className = "mat-name";
-            tdName.textContent = mat.name;
+            // Col 0: Resource Icon (replaces text to save space)
+            const tdIcon = document.createElement("td");
+            tdIcon.className = "mat-icon-cell";
+            tdIcon.title = `${mat.name} (Max 999/slot)`;
 
-            // Col 1: Stacks of 999
+            const img = document.createElement("img");
+            img.src = mat.image;
+            img.alt = mat.name;
+            img.className = "mat-icon";
+            img.title = `${mat.name} (Max 999/slot)`;
+            tdIcon.appendChild(img);
+
+            // Col 1: Full 999 Stacks Stepper [- Stacks + +5]
             const tdStacks = document.createElement("td");
             tdStacks.className = "center";
+
+            const stackBox = document.createElement("div");
+            stackBox.className = "stepper-box";
+
+            const btnDecStack = document.createElement("button");
+            btnDecStack.type = "button";
+            btnDecStack.className = "step-btn";
+            btnDecStack.textContent = "−";
+            btnDecStack.title = "Decrease 1 stack (or 5 with Shift)";
+
             const inputStacks = document.createElement("input");
             inputStacks.type = "number";
             inputStacks.min = "0";
             inputStacks.max = "9999";
-            inputStacks.className = "num-input";
+            inputStacks.className = "step-input";
+            inputStacks.id = `input_stacks_${mat.id}`;
             inputStacks.value = state.materials[mat.name]?.stacks || 0;
             inputStacks.dataset.mat = mat.name;
             inputStacks.dataset.type = "stacks";
-            inputStacks.title = `Number of full 999 stacks of ${mat.name}`;
-            tdStacks.appendChild(inputStacks);
 
-            // Col 2: Remainder
+            const btnIncStack = document.createElement("button");
+            btnIncStack.type = "button";
+            btnIncStack.className = "step-btn";
+            btnIncStack.textContent = "+";
+            btnIncStack.title = "Increase 1 stack (or 5 with Shift)";
+
+            const btnQuickStack = document.createElement("button");
+            btnQuickStack.type = "button";
+            btnQuickStack.className = "step-quick-btn";
+            btnQuickStack.textContent = "+5";
+            btnQuickStack.title = "Quickly add 5 stacks";
+
+            stackBox.appendChild(btnDecStack);
+            stackBox.appendChild(inputStacks);
+            stackBox.appendChild(btnIncStack);
+            stackBox.appendChild(btnQuickStack);
+            tdStacks.appendChild(stackBox);
+
+            // Col 2: Loose Items Stepper [-100 -1 Loose +1 +100]
             const tdRem = document.createElement("td");
             tdRem.className = "center";
+
+            const remBox = document.createElement("div");
+            remBox.className = "stepper-box";
+
+            const btnDec100 = document.createElement("button");
+            btnDec100.type = "button";
+            btnDec100.className = "step-btn-100 loose-step-100";
+            btnDec100.textContent = "−100";
+            btnDec100.title = "Decrease 100 items (Hold Shift for 10)";
+
+            const btnDec1 = document.createElement("button");
+            btnDec1.type = "button";
+            btnDec1.className = "step-btn";
+            btnDec1.textContent = "−";
+            btnDec1.title = "Decrease 1 item";
+
             const inputRem = document.createElement("input");
             inputRem.type = "number";
             inputRem.min = "0";
-            inputRem.max = "999999";
-            inputRem.className = "num-input";
+            inputRem.className = "step-input loose-input";
+            inputRem.id = `input_rem_${mat.id}`;
             inputRem.value = state.materials[mat.name]?.remainder || 0;
             inputRem.dataset.mat = mat.name;
             inputRem.dataset.type = "remainder";
-            inputRem.title = `Remaining items in partial stack (0 - 998)`;
-            tdRem.appendChild(inputRem);
+            inputRem.title = "Loose items (0 - 998). Numbers >= 999 automatically roll into stacks!";
 
-            // Col 3: Total & Slots Badge
+            const btnInc1 = document.createElement("button");
+            btnInc1.type = "button";
+            btnInc1.className = "step-btn";
+            btnInc1.textContent = "+";
+            btnInc1.title = "Increase 1 item";
+
+            const btnInc100 = document.createElement("button");
+            btnInc100.type = "button";
+            btnInc100.className = "step-btn-100 loose-step-100";
+            btnInc100.textContent = "+100";
+            btnInc100.title = "Increase 100 items (Hold Shift for 10)";
+
+            remBox.appendChild(btnDec100);
+            remBox.appendChild(btnDec1);
+            remBox.appendChild(inputRem);
+            remBox.appendChild(btnInc1);
+            remBox.appendChild(btnInc100);
+            tdRem.appendChild(remBox);
+
+            // Col 3: Total & Slots Badge with Row Clear (x) button
             const tdBadge = document.createElement("td");
-            tdBadge.className = "right slot-badge";
-            tdBadge.id = `badge_${mat.id}`;
-            tdBadge.textContent = "0 (0 sl)";
+            tdBadge.className = "right";
 
-            tr.appendChild(tdName);
+            const totalCell = document.createElement("div");
+            totalCell.className = "total-cell";
+
+            const badgeSpan = document.createElement("span");
+            badgeSpan.className = "slot-badge";
+            badgeSpan.id = `badge_${mat.id}`;
+            badgeSpan.textContent = "0 (0 sl)";
+
+            const clearRowBtn = document.createElement("button");
+            clearRowBtn.type = "button";
+            clearRowBtn.className = "row-clear-btn";
+            clearRowBtn.textContent = "×";
+            clearRowBtn.title = `Reset ${mat.name} to 0`;
+
+            totalCell.appendChild(badgeSpan);
+            totalCell.appendChild(clearRowBtn);
+            tdBadge.appendChild(totalCell);
+
+            tr.appendChild(tdIcon);
             tr.appendChild(tdStacks);
             tr.appendChild(tdRem);
             tr.appendChild(tdBadge);
 
             materialsTableBody.appendChild(tr);
 
-            // Event listeners
+            // Event Listeners for Text Inputs
             inputStacks.addEventListener("input", onMaterialInput);
             inputRem.addEventListener("input", onMaterialInput);
+
+            // Auto-select text on focus so user can immediately type without backspacing
+            inputStacks.addEventListener("focus", () => inputStacks.select());
+            inputRem.addEventListener("focus", () => inputRem.select());
+
+            // Click Handlers for Stacks Stepper Buttons
+            btnIncStack.addEventListener("click", (e) => {
+                const delta = e.shiftKey ? 5 : 1;
+                modifyStack(mat.name, delta);
+            });
+            btnDecStack.addEventListener("click", (e) => {
+                const delta = e.shiftKey ? -5 : -1;
+                modifyStack(mat.name, delta);
+            });
+            btnQuickStack.addEventListener("click", () => {
+                modifyStack(mat.name, 5);
+            });
+
+            // Click Handlers for Loose Stepper Buttons (+1, -1, +100, -100 with Shift -> 10)
+            btnInc1.addEventListener("click", () => {
+                modifyRemainder(mat.name, 1);
+            });
+            btnDec1.addEventListener("click", () => {
+                modifyRemainder(mat.name, -1);
+            });
+            btnInc100.addEventListener("click", (e) => {
+                const delta = e.shiftKey ? 10 : 100;
+                modifyRemainder(mat.name, delta);
+            });
+            btnDec100.addEventListener("click", (e) => {
+                const delta = e.shiftKey ? -10 : -100;
+                modifyRemainder(mat.name, delta);
+            });
+
+            clearRowBtn.addEventListener("click", () => {
+                resetMaterial(mat.name);
+            });
         });
+    }
+
+    // Dynamic Shift Key Detection: updates all loose ±100 buttons to show ±10 when Shift is held down
+    window.addEventListener("keydown", (e) => {
+        if (e.key === "Shift") {
+            document.querySelectorAll(".loose-step-100").forEach(btn => {
+                if (btn.textContent.includes("+")) {
+                    btn.textContent = "+10";
+                } else if (btn.textContent.includes("−") || btn.textContent.includes("-")) {
+                    btn.textContent = "−10";
+                }
+            });
+        }
+    });
+
+    window.addEventListener("keyup", (e) => {
+        if (e.key === "Shift") {
+            document.querySelectorAll(".loose-step-100").forEach(btn => {
+                if (btn.textContent.includes("+")) {
+                    btn.textContent = "+100";
+                } else if (btn.textContent.includes("−") || btn.textContent.includes("-")) {
+                    btn.textContent = "−100";
+                }
+            });
+        }
+    });
+
+    function modifyStack(matName, delta) {
+        if (!state.materials[matName]) {
+            state.materials[matName] = { stacks: 0, remainder: 0 };
+        }
+        state.materials[matName].stacks = Math.max(0, (state.materials[matName].stacks || 0) + delta);
+        const mat = MATERIALS.find(m => m.name === matName);
+        if (mat) {
+            const input = document.getElementById(`input_stacks_${mat.id}`);
+            if (input) input.value = state.materials[matName].stacks;
+        }
+        updateMaterialCalculations();
+    }
+
+    function modifyRemainder(matName, delta) {
+        if (!state.materials[matName]) {
+            state.materials[matName] = { stacks: 0, remainder: 0 };
+        }
+        let total = (state.materials[matName].stacks * 999) + state.materials[matName].remainder + delta;
+        total = Math.max(0, total);
+        state.materials[matName].stacks = Math.floor(total / 999);
+        state.materials[matName].remainder = total % 999;
+
+        const mat = MATERIALS.find(m => m.name === matName);
+        if (mat) {
+            const stackInput = document.getElementById(`input_stacks_${mat.id}`);
+            const remInput = document.getElementById(`input_rem_${mat.id}`);
+            if (stackInput) stackInput.value = state.materials[matName].stacks;
+            if (remInput) remInput.value = state.materials[matName].remainder;
+        }
+        updateMaterialCalculations();
+    }
+
+    function resetMaterial(matName) {
+        if (!state.materials[matName]) return;
+        state.materials[matName] = { stacks: 0, remainder: 0 };
+        const mat = MATERIALS.find(m => m.name === matName);
+        if (mat) {
+            const stackInput = document.getElementById(`input_stacks_${mat.id}`);
+            const remInput = document.getElementById(`input_rem_${mat.id}`);
+            if (stackInput) stackInput.value = 0;
+            if (remInput) remInput.value = 0;
+        }
+        updateMaterialCalculations();
+    }
+
+    // Material Input Handler (with auto-rollover for loose items >= 999)
+    function onMaterialInput(e) {
+        const matName = e.target.dataset.mat;
+        const type = e.target.dataset.type;
+        const val = Math.max(0, parseInt(e.target.value, 10) || 0);
+
+        if (!state.materials[matName]) {
+            state.materials[matName] = { stacks: 0, remainder: 0 };
+        }
+
+        if (type === "remainder" && val >= 999) {
+            const extraStacks = Math.floor(val / 999);
+            const remainder = val % 999;
+            state.materials[matName].stacks = (state.materials[matName].stacks || 0) + extraStacks;
+            state.materials[matName].remainder = remainder;
+
+            const mat = MATERIALS.find(m => m.name === matName);
+            if (mat) {
+                const stackInput = document.getElementById(`input_stacks_${mat.id}`);
+                if (stackInput) stackInput.value = state.materials[matName].stacks;
+            }
+            e.target.value = remainder;
+        } else {
+            state.materials[matName][type] = val;
+        }
+
+        updateMaterialCalculations();
+    }
+
+    // Calculate Totals & Update Badges
+    function updateMaterialCalculations() {
+        let totalItems = 0;
+        let totalSlots = 0;
+
+        MATERIALS.forEach(mat => {
+            const mState = state.materials[mat.name] || { stacks: 0, remainder: 0 };
+            const qty = (mState.stacks * 999) + mState.remainder;
+            const slots = calculateMatSlots(qty);
+
+            totalItems += qty;
+            totalSlots += slots;
+
+            const badge = document.getElementById(`badge_${mat.id}`);
+            if (badge) {
+                badge.textContent = `${qty.toLocaleString()} (${slots} sl)`;
+                badge.style.color = slots > 0 ? "#cbd5e1" : "var(--text-muted)";
+            }
+        });
+
+        totalItemsStat.textContent = `${totalItems.toLocaleString()} items`;
+        totalSlotsStat.textContent = `${totalSlots} slots`;
+    }
+
+    function getMaterialTotals() {
+        const totals = {};
+        MATERIALS.forEach(mat => {
+            const mState = state.materials[mat.name] || { stacks: 0, remainder: 0 };
+            totals[mat.name] = (mState.stacks * 999) + mState.remainder;
+        });
+        return totals;
     }
 
     // Initialize Trap Preference Cards (Sorted Alphabetically)
@@ -160,20 +408,40 @@ document.addEventListener("DOMContentLoaded", () => {
                 state.weights[trap.id] = val;
                 weightBadge.textContent = `Weight: ${val}`;
                 weightBadge.className = `weight-badge ${val === 0 ? "zero" : ""}`;
-                saveToLocalStorage();
             });
 
             sliderRow.appendChild(slider);
 
-            // Line 3: Left-Aligned Recipe Cost Text
+            // Line 3: Recipe Cost Row with Resource Icons
             const costRow = document.createElement("div");
             costRow.className = "trap-cost-row";
 
-            const ingList = Object.entries(trap.ingredients)
-                .map(([name, cost]) => `${cost} ${name}`)
-                .join("  •  ");
+            const costLabel = document.createElement("span");
+            costLabel.textContent = "Cost:";
+            costLabel.style.marginRight = "3px";
+            costLabel.style.color = "var(--text-muted)";
+            costRow.appendChild(costLabel);
 
-            costRow.textContent = `Cost: ${ingList}`;
+            Object.entries(trap.ingredients).forEach(([name, cost]) => {
+                const matDef = MATERIALS.find(m => m.name === name);
+                const chip = document.createElement("span");
+                chip.className = "cost-item";
+                chip.title = `${cost} ${name}`;
+
+                if (matDef) {
+                    const icon = document.createElement("img");
+                    icon.src = matDef.image;
+                    icon.alt = name;
+                    icon.className = "cost-icon";
+                    chip.appendChild(icon);
+                }
+
+                const qty = document.createElement("span");
+                qty.textContent = cost;
+                chip.appendChild(qty);
+
+                costRow.appendChild(chip);
+            });
 
             card.appendChild(header);
             card.appendChild(sliderRow);
@@ -183,70 +451,78 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Material Input Handler
-    function onMaterialInput(e) {
-        const matName = e.target.dataset.mat;
-        const type = e.target.dataset.type;
-        const val = Math.max(0, parseInt(e.target.value, 10) || 0);
+    // Reset All Trap Weights to Default (5)
+    if (resetWeightsBtn) {
+        resetWeightsBtn.addEventListener("click", () => {
+            TRAP_RECIPES.forEach(trap => {
+                state.weights[trap.id] = 5;
+            });
+            renderTraps();
+        });
+    }
 
-        if (!state.materials[matName]) {
-            state.materials[matName] = { stacks: 0, remainder: 0 };
+    // Solver Mode Selection (Default: clean_stacks)
+    let currentMode = "clean_stacks";
+
+    const modeCleanBtn = document.getElementById("modeCleanBtn");
+    const modeWasmBtn = document.getElementById("modeWasmBtn");
+    const currentModeBadge = document.getElementById("currentModeBadge");
+    const solverModeCaption = document.getElementById("solverModeCaption");
+
+    function setSolverMode(mode) {
+        currentMode = mode;
+
+        if (mode === "exact_wasm") {
+            if (modeCleanBtn) modeCleanBtn.classList.remove("active");
+            if (modeWasmBtn) modeWasmBtn.classList.add("active");
+            if (currentModeBadge) currentModeBadge.textContent = "Exact WASM (Java Parity)";
+            if (solverModeCaption) solverModeCaption.textContent = "Maximum compression: crafts partial batches (e.g. 79 Launchers) for 100% exact parity with Java OR-Tools.";
+        } else {
+            if (modeWasmBtn) modeWasmBtn.classList.remove("active");
+            if (modeCleanBtn) modeCleanBtn.classList.add("active");
+            if (currentModeBadge) currentModeBadge.textContent = "Clean 200-Stacks";
+            if (solverModeCaption) solverModeCaption.textContent = "Fast & offline: crafts full 200-stacks to keep your backpack tidy.";
         }
-        state.materials[matName][type] = val;
-
-        updateMaterialCalculations();
-        saveToLocalStorage();
     }
 
-    // Calculate Totals & Update Badges
-    function updateMaterialCalculations() {
-        let totalItems = 0;
-        let totalSlots = 0;
-
-        MATERIALS.forEach(mat => {
-            const mState = state.materials[mat.name] || { stacks: 0, remainder: 0 };
-            const qty = (mState.stacks * 999) + mState.remainder;
-            const slots = calculateMatSlots(qty);
-
-            totalItems += qty;
-            totalSlots += slots;
-
-            const badge = document.getElementById(`badge_${mat.id}`);
-            if (badge) {
-                badge.textContent = `${qty.toLocaleString()} (${slots} sl)`;
-                badge.style.color = slots > 0 ? "var(--text-muted)" : "#64748b";
-            }
-        });
-
-        totalItemsStat.textContent = `${totalItems.toLocaleString()} items`;
-        totalSlotsStat.textContent = `${totalSlots} slots`;
-    }
-
-    function getMaterialTotals() {
-        const totals = {};
-        MATERIALS.forEach(mat => {
-            const mState = state.materials[mat.name] || { stacks: 0, remainder: 0 };
-            totals[mat.name] = (mState.stacks * 999) + mState.remainder;
-        });
-        return totals;
+    if (modeCleanBtn && modeWasmBtn) {
+        modeCleanBtn.addEventListener("click", () => setSolverMode("clean_stacks"));
+        modeWasmBtn.addEventListener("click", () => setSolverMode("exact_wasm"));
+        setSolverMode(currentMode);
     }
 
     // Optimization Trigger
-    optimizeBtn.addEventListener("click", () => {
+    optimizeBtn.addEventListener("click", async () => {
         optimizeBtn.disabled = true;
         optimizeBtn.textContent = "⚙️ OPTIMIZING...";
-        statusText.textContent = "Solving Mixed-Integer Linear Program...";
+        statusText.style.color = "var(--text-muted)";
+        statusText.textContent = currentMode === "exact_wasm"
+            ? "Solving with WebAssembly HiGHS MILP..."
+            : "Solving with Clean Stacks optimizer...";
 
-        setTimeout(() => {
+        // Yield execution so the browser paints "⚙️ OPTIMIZING..." before computation
+        await new Promise(resolve => setTimeout(resolve, 50));
+
+        // Keep "OPTIMIZING..." visible for at least 200ms on fast cached runs
+        const minDisplayTimer = new Promise(resolve => setTimeout(resolve, 150));
+
+        try {
             const totals = getMaterialTotals();
-            const result = optimizer.optimize(totals, state.weights);
+            const [result] = await Promise.all([
+                optimizer.optimize(totals, state.weights, currentMode),
+                minDisplayTimer
+            ]);
             state.lastResult = result;
 
             displayResults(result);
-
+        } catch (err) {
+            console.error("Optimization failed:", err);
+            statusText.textContent = "Optimization error: " + (err.message || err);
+            statusText.style.color = "var(--danger)";
+        } finally {
             optimizeBtn.disabled = false;
             optimizeBtn.textContent = "⚡ OPTIMIZE STORAGE";
-        }, 30);
+        }
     });
 
     // Display Results in UI
@@ -277,7 +553,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // Traps to Craft Table
         trapsTableBody.innerHTML = "";
         if (result.trapsToCraft.length === 0) {
-            trapsTableBody.innerHTML = `<tr><td colspan="4" class="center" style="color:var(--text-muted);">(No traps crafted)</td></tr>`;
+            trapsTableBody.innerHTML = `<tr><td colspan="4" class="center" style="color:var(--text-muted);">(No traps crafted - crafting traps would increase slots)</td></tr>`;
         } else {
             result.trapsToCraft.forEach(trap => {
                 const tr = document.createElement("tr");
@@ -294,9 +570,13 @@ document.addEventListener("DOMContentLoaded", () => {
         // Leftover Materials Table
         leftoversTableBody.innerHTML = "";
         result.leftovers.forEach(mat => {
+            const matDef = MATERIALS.find(m => m.name === mat.name);
             const tr = document.createElement("tr");
             tr.innerHTML = `
-                <td class="mat-name">${mat.name}</td>
+                <td class="mat-name" style="display:flex; align-items:center; gap:6px;">
+                    ${matDef ? `<img src="${matDef.image}" class="cost-icon" alt="${mat.name}">` : ""}
+                    <span>${mat.name}</span>
+                </td>
                 <td class="center">${mat.remaining.toLocaleString()}</td>
                 <td class="center" style="color:var(--warning); font-weight:600;">${mat.slots}</td>
                 <td class="right" style="color:var(--text-muted);">${mat.consumed.toLocaleString()}</td>
@@ -305,7 +585,11 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         statusText.style.color = "var(--text-muted)";
-        statusText.textContent = `Optimization complete (${result.executionTimeMs} ms). Reduced slots from ${result.beforeSlots} to ${result.afterSlots} (${result.slotsSaved} saved, ${result.reductionPercent.toFixed(1)}%). Crafted ${result.totalTrapsCrafted.toLocaleString()} traps.`;
+        if (result.modeFallback) {
+            statusText.innerHTML = `⚠️ <strong style="color:var(--warning);">WASM Offline Fallback:</strong> Solved with ${result.solverLabel} (${result.executionTimeMs} ms). Reduced slots from ${result.beforeSlots} to ${result.afterSlots} (${result.slotsSaved} saved).`;
+        } else {
+            statusText.innerHTML = `✓ <strong>${result.solverLabel}:</strong> Solved in ${result.executionTimeMs} ms. Reduced slots from ${result.beforeSlots} to ${result.afterSlots} (${result.slotsSaved} saved, ${result.reductionPercent.toFixed(1)}%). Crafted ${result.totalTrapsCrafted.toLocaleString()} traps.`;
+        }
     }
 
     // Tabs switching
@@ -323,101 +607,13 @@ document.addEventListener("DOMContentLoaded", () => {
         tabTrapsContent.classList.remove("active");
     });
 
-    // Clear All
+    // Clear All Materials
     clearMatsBtn.addEventListener("click", () => {
         MATERIALS.forEach(mat => {
             state.materials[mat.name] = { stacks: 0, remainder: 0 };
         });
         renderMaterials();
         updateMaterialCalculations();
-        saveToLocalStorage();
-    });
-
-    // Random Data
-    randomMatsBtn.addEventListener("click", () => {
-        MATERIALS.forEach(mat => {
-            const stacks = Math.floor(Math.random() * 15) + 1;
-            const remainder = Math.floor(Math.random() * 999);
-            state.materials[mat.name] = { stacks, remainder };
-        });
-        renderMaterials();
-        updateMaterialCalculations();
-        saveToLocalStorage();
-    });
-
-    // Trap Presets
-    trapPresetSelect.addEventListener("change", (e) => {
-        const val = e.target.value;
-        if (!val) return;
-
-        TRAP_RECIPES.forEach(trap => {
-            if (val === "all_5") state.weights[trap.id] = 5;
-            else if (val === "all_10") state.weights[trap.id] = 10;
-            else if (val === "damage") {
-                state.weights[trap.id] = trap.category.includes("Wall") || trap.category.includes("Ceiling") ? 8 : 2;
-            } else if (val === "floor_heavy") {
-                state.weights[trap.id] = trap.category.includes("Floor") ? 10 : 2;
-            }
-        });
-
-        renderTraps();
-        saveToLocalStorage();
-        trapPresetSelect.value = "";
-    });
-
-    // Profile Management (localStorage)
-    function refreshProfileDropdown() {
-        materialProfileSelect.innerHTML = `<option value="">-- Select Inventory Profile --</option>`;
-        Object.keys(state.profiles).forEach(name => {
-            const opt = document.createElement("option");
-            opt.value = name;
-            opt.textContent = name;
-            materialProfileSelect.appendChild(opt);
-        });
-    }
-
-    saveProfileBtn.addEventListener("click", () => {
-        const name = prompt("Enter a name for this custom inventory profile:");
-        if (!name || !name.trim()) return;
-        const trimmed = name.trim();
-
-        const currentTotals = getMaterialTotals();
-        state.profiles[trimmed] = currentTotals;
-        saveToLocalStorage();
-        refreshProfileDropdown();
-        materialProfileSelect.value = trimmed;
-        alert(`Profile "${trimmed}" saved!`);
-    });
-
-    deleteProfileBtn.addEventListener("click", () => {
-        const selected = materialProfileSelect.value;
-        if (!selected) {
-            alert("Please select a profile to delete.");
-            return;
-        }
-        if (confirm(`Are you sure you want to delete profile "${selected}"?`)) {
-            delete state.profiles[selected];
-            saveToLocalStorage();
-            refreshProfileDropdown();
-        }
-    });
-
-    materialProfileSelect.addEventListener("change", (e) => {
-        const name = e.target.value;
-        if (!name || !state.profiles[name]) return;
-
-        const profileData = state.profiles[name];
-        MATERIALS.forEach(mat => {
-            const total = profileData[mat.name] || 0;
-            state.materials[mat.name] = {
-                stacks: Math.floor(total / 999),
-                remainder: total % 999
-            };
-        });
-
-        renderMaterials();
-        updateMaterialCalculations();
-        saveToLocalStorage();
     });
 
     // Copy Summary to Clipboard
@@ -468,37 +664,8 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    // LocalStorage State Persistence
-    function saveToLocalStorage() {
-        try {
-            localStorage.setItem("stw_optimizer_state", JSON.stringify({
-                materials: state.materials,
-                weights: state.weights,
-                profiles: state.profiles
-            }));
-        } catch (e) {
-            console.warn("Could not save to localStorage:", e);
-        }
-    }
-
-    function loadFromLocalStorage() {
-        try {
-            const raw = localStorage.getItem("stw_optimizer_state");
-            if (raw) {
-                const parsed = JSON.parse(raw);
-                if (parsed.materials) state.materials = parsed.materials;
-                if (parsed.weights) state.weights = parsed.weights;
-                if (parsed.profiles) state.profiles = parsed.profiles;
-            }
-        } catch (e) {
-            console.warn("Could not load from localStorage:", e);
-        }
-    }
-
-    // App Startup
-    loadFromLocalStorage();
+    // App Startup (Clean slate every run)
     renderMaterials();
     renderTraps();
     updateMaterialCalculations();
-    refreshProfileDropdown();
 });

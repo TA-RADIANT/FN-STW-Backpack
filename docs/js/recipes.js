@@ -4,18 +4,18 @@
  */
 
 const MATERIALS = [
-    { id: "mech", key: "MECHANICAL_PARTS", name: "Mechanical Parts", stackSize: 999 },
-    { id: "twine", key: "TWINE", name: "Twine", stackSize: 999 },
-    { id: "quartz", key: "QUARTZ_CRYSTAL", name: "Quartz Crystal", stackSize: 999 },
-    { id: "tape", key: "DUCT_TAPE", name: "Duct Tape", stackSize: 999 },
-    { id: "powder", key: "MINERAL_POWDER", name: "Mineral Powder", stackSize: 999 },
-    { id: "bacon", key: "BACON", name: "Bacon", stackSize: 999 },
-    { id: "batteries", key: "BATTERIES", name: "Batteries", stackSize: 999 },
-    { id: "herbs", key: "FIBROUS_HERBS", name: "Fibrous Herbs", stackSize: 999 },
-    { id: "flowers", key: "FLOWER_PETALS", name: "Flower Petals", stackSize: 999 },
-    { id: "nabs", key: "NUTS_AND_BOLTS", name: "Nuts 'n' Bolts", stackSize: 999 },
-    { id: "planks", key: "PLANKS", name: "Planks", stackSize: 999 },
-    { id: "rough", key: "ROUGH_ORE", name: "Rough Ore", stackSize: 999 }
+    { id: "mech", key: "MECHANICAL_PARTS", name: "Mechanical Parts", stackSize: 999, image: "images/Efficient_Mechanical_Parts_-_Resource_-_Save_the_World.webp" },
+    { id: "twine", key: "TWINE", name: "Twine", stackSize: 999, image: "images/Carved_Twine_-_Resource_-_Save_the_World.webp" },
+    { id: "quartz", key: "QUARTZ_CRYSTAL", name: "Quartz Crystal", stackSize: 999, image: "images/Icon_Crystal_White.webp" },
+    { id: "tape", key: "DUCT_TAPE", name: "Duct Tape", stackSize: 999, image: "images/Duct_Tape_-_Resource_-_Save_the_World.webp" },
+    { id: "powder", key: "MINERAL_POWDER", name: "Mineral Powder", stackSize: 999, image: "images/Oxidized_Mineral_Powder_-_Resource_-_Save_the_World.webp" },
+    { id: "bacon", key: "BACON", name: "Bacon", stackSize: 999, image: "images/Bacon_-_Resource_-_Save_the_World.webp" },
+    { id: "batteries", key: "BATTERIES", name: "Batteries", stackSize: 999, image: "images/Batteries_-_Resource_-_Save_the_World.webp" },
+    { id: "herbs", key: "FIBROUS_HERBS", name: "Fibrous Herbs", stackSize: 999, image: "images/Fibrous_Herbs_-_Resource_-_Save_the_World.webp" },
+    { id: "flowers", key: "FLOWER_PETALS", name: "Flower Petals", stackSize: 999, image: "images/Flower_Petals_-_Resource_-_Save_the_World.webp" },
+    { id: "nabs", key: "NUTS_AND_BOLTS", name: "Nuts 'n' Bolts", stackSize: 999, image: "images/Icon_Crafting_Tier1_Nut_Bolts.webp" },
+    { id: "planks", key: "PLANKS", name: "Planks", stackSize: 999, image: "images/Planks_-_Resource_-_Save_the_World.webp" },
+    { id: "rough", key: "ROUGH_ORE", name: "Rough Ore", stackSize: 999, image: "images/Rough_Ore_-_Resource_-_Save_the_World.webp" }
 ];
 
 const TRAP_RECIPES = [
@@ -131,16 +131,7 @@ const TRAP_RECIPES = [
             "Bacon": 1
         }
     },
-    {
-        id: "jump_boost_pad",
-        name: "Jump Boost Pad",
-        category: "Floor",
-        defaultWeight: 5.0,
-        ingredients: {
-            "Nuts 'n' Bolts": 2,
-            "Planks": 1
-        }
-    },
+
     {
         id: "retractable_floor_spikes",
         name: "Retractable Floor Spikes",

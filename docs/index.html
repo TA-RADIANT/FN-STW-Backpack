@@ -31,24 +31,14 @@
                 <h2>1. Raw Materials (Max 999/slot)</h2>
             </div>
 
-            <!-- Profile Selector -->
-            <div class="profile-row">
-                <label for="materialProfileSelect">Profile:</label>
-                <select id="materialProfileSelect">
-                    <option value="">-- Select Inventory Profile --</option>
-                </select>
-                <button id="saveProfileBtn" class="btn-primary" title="Save current quantities as a custom profile">Save...</button>
-                <button id="deleteProfileBtn" class="btn-danger" title="Delete selected custom profile">Delete</button>
-            </div>
-
-            <!-- 12 Materials Table -->
+            <!-- 12 Materials Table with Tactile Steppers -->
             <div class="materials-list-container">
                 <table class="materials-table">
                     <thead>
                         <tr>
-                            <th>Material</th>
+                            <th class="center" style="width: 42px;">Item</th>
                             <th class="center">999 Stacks</th>
-                            <th class="center">+ Remainder</th>
+                            <th class="center">+ Loose Items</th>
                             <th class="right">Total (Slots)</th>
                         </tr>
                     </thead>
@@ -66,32 +56,31 @@
                 <div class="stats-val highlight" id="totalSlotsStat">0 slots</div>
             </div>
 
-            <!-- Quick Action Buttons -->
+            <!-- Tip Box for Steppers -->
+            <div class="tip-box">
+                <span class="tip-icon">💡</span>
+                <span class="tip-text">
+                    <strong>Quick Controls:</strong> Click <strong>+1</strong> / <strong>−1</strong> for exact numbers, or <strong>+100</strong> / <strong>−100</strong> for bulk amounts. <em>Hold <strong>Shift</strong> while clicking ±100 to step by ±10 instead!</em> Numbers ≥ 999 automatically roll into stacks.
+                </span>
+            </div>
+
+            <!-- Action Buttons -->
             <div class="panel-actions">
-                <button id="clearMatsBtn" class="btn-secondary">Clear All</button>
-                <button id="randomMatsBtn" class="btn-primary">Set Random Data</button>
+                <button id="clearMatsBtn" class="btn-secondary">Clear All Materials</button>
             </div>
         </section>
 
         <!-- Column 2: Trap Preference Weights -->
         <section class="panel-card">
             <div class="panel-header">
-                <h2>2. Trap Preference Weights (0 - 10)</h2>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h2>2. Trap Preferences (0 - 10)</h2>
+                    <button id="resetWeightsBtn" class="btn-small-link" title="Reset all trap weights to balanced default (5)">Reset All (5)</button>
+                </div>
+                <p class="panel-subtitle">Used by <em>Clean Stacks</em> mode to prioritize your favored traps. Setting to 0 disables that trap.</p>
             </div>
 
-            <!-- Preset Selector -->
-            <div class="profile-row">
-                <label for="trapPresetSelect">Presets:</label>
-                <select id="trapPresetSelect">
-                    <option value="">-- Quick Adjustment Presets --</option>
-                    <option value="all_5">Balanced (All Weights = 5)</option>
-                    <option value="all_10">Max Crafting (All Weights = 10)</option>
-                    <option value="damage">Damage Traps Heavy (Walls & Ceilings)</option>
-                    <option value="floor_heavy">Floor Traps Heavy</option>
-                </select>
-            </div>
-
-            <!-- 18 Traps Alphabetical List -->
+            <!-- 17 Traps Alphabetical List -->
             <div class="traps-list-container" id="trapsListContainer">
                 <!-- Rendered dynamically by app.js -->
             </div>
@@ -101,6 +90,32 @@
         <section class="panel-card results-panel">
             <div class="panel-header">
                 <h2>3. Optimization & Storage Results</h2>
+            </div>
+
+            <!-- Optimization Mode Selector -->
+            <div class="solver-mode-box">
+                <div class="solver-mode-header">
+                    <span class="solver-mode-title">Solver Mode:</span>
+                    <span class="mode-badge" id="currentModeBadge">Clean 200-Stacks</span>
+                </div>
+                <div class="mode-toggle-group">
+                    <button type="button" class="mode-toggle-btn active" id="modeCleanBtn" data-mode="clean_stacks">
+                        ⚡ Clean Stacks (200s)
+                    </button>
+                    <button type="button" class="mode-toggle-btn" id="modeWasmBtn" data-mode="exact_wasm">
+                        🔬 Max Lossless (WASM)
+                    </button>
+                </div>
+                <p class="solver-mode-caption" id="solverModeCaption">
+                    Fast &amp; offline: crafts full 200-stacks to keep your backpack tidy.
+                </p>
+
+                <!-- Verbose Weights & Solver Tip -->
+                <div class="solver-weights-tip">
+                    <div class="tip-title">ℹ️ How Each Solver Treats Trap Weights:</div>
+                    <p>• <strong>⚡ Clean Stacks (200s):</strong> Uses your weights directly to prioritize which full 200-stacks to craft first. Any trap set to <strong>0</strong> is strictly excluded from crafting.</p>
+                    <p>• <strong>🔬 Max Lossless (WASM):</strong> Focuses 100% on maximum mathematical slot compression (parity with Java). Your weights are not used to dictate trap types—the solver calculates the absolute global minimum slot count regardless of preferences, using weights only as microscopic tie-breakers when two choices yield identical slot counts.</p>
+                </div>
             </div>
 
             <!-- Large Action Button -->

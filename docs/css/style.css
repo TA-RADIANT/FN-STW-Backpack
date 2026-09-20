@@ -79,7 +79,7 @@ header.app-header {
 main.optimizer-container {
     flex: 1;
     display: grid;
-    grid-template-columns: 1fr 1.15fr 1.1fr;
+    grid-template-columns: 1.4fr 0.75fr 1.1fr;
     gap: 16px;
     padding: 16px 24px;
 }
@@ -199,11 +199,39 @@ button {
     filter: brightness(1.1);
 }
 
+.btn-small-link {
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid rgba(0, 210, 255, 0.25);
+    border-radius: 4px;
+    padding: 3px 8px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.btn-small-link:hover {
+    background: rgba(0, 210, 255, 0.15);
+    border-color: var(--accent);
+    color: #fff;
+}
+
+/* Hide default browser up/down arrows */
+input[type=number]::-webkit-inner-spin-button, 
+input[type=number]::-webkit-outer-spin-button { 
+    -webkit-appearance: none; 
+    margin: 0; 
+}
+input[type=number] {
+    -moz-appearance: textfield;
+}
+
 /* Materials Table / List */
 .materials-list-container {
     flex: 1;
     overflow-y: auto;
-    max-height: 480px;
+    max-height: 560px;
     padding-right: 4px;
 }
 
@@ -217,7 +245,7 @@ button {
     text-transform: uppercase;
     color: var(--text-muted);
     font-weight: 600;
-    padding: 6px 4px;
+    padding: 8px 4px;
     text-align: left;
     border-bottom: 1px solid var(--border-color);
 }
@@ -226,40 +254,283 @@ button {
 .materials-table th.right { text-align: right; }
 
 .materials-table td {
-    padding: 6px 4px;
+    padding: 5px 3px;
     vertical-align: middle;
 }
 
 .materials-table tr:hover {
-    background-color: rgba(255, 255, 255, 0.02);
+    background-color: rgba(255, 255, 255, 0.03);
 }
 
 .mat-name {
     font-size: 0.85rem;
     font-weight: 600;
     color: #e2e8f0;
+    white-space: nowrap;
 }
 
-.num-input {
-    width: 72px;
+.mat-icon-cell {
+    width: 38px;
+    text-align: center;
+    padding: 2px 4px;
+}
+
+.mat-icon {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+    vertical-align: middle;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.45));
+    transition: transform 0.15s ease;
+    border-radius: 4px;
+    cursor: help;
+    display: inline-block;
+}
+
+.mat-icon:hover {
+    transform: scale(1.25);
+}
+
+.cost-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    background: rgba(255, 255, 255, 0.04);
+    padding: 2px 5px;
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    font-size: 0.75rem;
+    color: #cbd5e1;
+}
+
+.cost-icon {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+    vertical-align: middle;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
+}
+
+/* Tactile Stepper Box */
+.stepper-box {
+    display: inline-flex;
+    align-items: center;
     background: #090d16;
     border: 1px solid var(--border-color);
-    color: #fff;
-    border-radius: 4px;
-    padding: 4px 6px;
-    font-size: 0.85rem;
-    text-align: center;
+    border-radius: 6px;
+    padding: 1px;
+    gap: 1px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.num-input:focus {
+.stepper-box:focus-within {
     border-color: var(--accent);
+    box-shadow: 0 0 6px rgba(0, 210, 255, 0.25);
+}
+
+.step-btn {
+    width: 24px;
+    height: 26px;
+    background: #111827;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #cbd5e1;
+    font-size: 1rem;
+    font-weight: 800;
+    line-height: 1;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+    user-select: none;
+    padding: 0;
+}
+
+.step-btn:hover {
+    background: var(--accent);
+    color: #050811;
+    border-color: var(--accent);
+}
+
+.step-btn:active {
+    transform: scale(0.92);
+}
+
+.step-input {
+    width: 42px;
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-size: 0.88rem;
+    font-weight: 700;
+    text-align: center;
+    padding: 2px 2px;
+    outline: none;
+}
+
+.step-input.loose-input {
+    width: 46px;
+}
+
+.step-quick-btn {
+    background: #111827;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--accent);
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0 5px;
+    height: 26px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    user-select: none;
+}
+
+.step-quick-btn:hover {
+    background: rgba(0, 210, 255, 0.2);
+    border-color: var(--accent);
+}
+
+.step-quick-btn:active {
+    transform: scale(0.92);
+}
+
+/* Loose 100/10 Buttons */
+.step-btn-100 {
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 0 4px;
+    height: 26px;
+    background: #111827;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--accent);
+    border-radius: 4px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+    user-select: none;
+    white-space: nowrap;
+}
+
+.step-btn-100:hover {
+    background: rgba(0, 210, 255, 0.2);
+    border-color: var(--accent);
+    color: #fff;
+}
+
+.step-btn-100:active {
+    transform: scale(0.92);
+}
+
+/* Helper Tip Box */
+.tip-box {
+    background: rgba(14, 165, 233, 0.08);
+    border: 1px solid rgba(14, 165, 233, 0.2);
+    border-radius: 6px;
+    padding: 8px 10px;
+    margin-top: 10px;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 0.75rem;
+    line-height: 1.4;
+    color: #cbd5e1;
+}
+
+.tip-icon {
+    font-size: 0.95rem;
+    flex-shrink: 0;
+    line-height: 1.2;
+}
+
+.tip-text strong {
+    color: #fff;
+}
+
+.tip-text em {
+    color: var(--accent);
+    font-style: normal;
+    font-weight: 600;
+}
+
+.panel-subtitle {
+    font-size: 0.73rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+    line-height: 1.35;
+}
+
+.panel-subtitle em {
+    color: #cbd5e1;
+    font-style: normal;
+}
+
+/* Solver Weights Explanation Card */
+.solver-weights-tip {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    padding: 10px 12px;
+    margin-top: 8px;
+    font-size: 0.74rem;
+    line-height: 1.45;
+    color: #94a3b8;
+}
+
+.solver-weights-tip .tip-title {
+    font-weight: 700;
+    color: #e2e8f0;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.solver-weights-tip p {
+    margin: 5px 0 0 0;
+}
+
+.solver-weights-tip strong {
+    color: #fff;
+}
+
+.total-cell {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4px;
 }
 
 .slot-badge {
     font-size: 0.8rem;
     color: var(--text-muted);
-    text-align: right;
+    font-weight: 600;
     white-space: nowrap;
+}
+
+.row-clear-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 0 4px;
+    line-height: 1;
+    border-radius: 4px;
+    transition: all 0.15s;
+    opacity: 0.5;
+}
+
+.materials-table tr:hover .row-clear-btn {
+    opacity: 1;
+}
+
+.row-clear-btn:hover {
+    color: var(--danger);
+    background: rgba(255, 75, 75, 0.15);
 }
 
 /* Material Panel Footer Stats */
@@ -385,6 +656,85 @@ button {
     flex-direction: column;
     gap: 14px;
 }
+
+/* Solver Mode Selector */
+.solver-mode-box {
+    background: #090d16;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.solver-mode-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.solver-mode-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.mode-badge {
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 12px;
+    background: rgba(0, 210, 255, 0.15);
+    color: var(--accent);
+    border: 1px solid rgba(0, 210, 255, 0.3);
+}
+
+.mode-toggle-group {
+    display: flex;
+    gap: 6px;
+    background: #060910;
+    padding: 3px;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+}
+
+.mode-toggle-btn {
+    flex: 1;
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    color: var(--text-muted);
+    padding: 7px 10px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.mode-toggle-btn:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.mode-toggle-btn.active {
+    background: var(--accent);
+    color: #050811;
+    font-weight: 800;
+    box-shadow: 0 0 10px rgba(0, 210, 255, 0.3);
+}
+
+.solver-mode-caption {
+    font-size: 0.73rem;
+    color: var(--text-muted);
+    margin: 0;
+    line-height: 1.3;
+}
+
 
 .metrics-grid {
     display: grid;
