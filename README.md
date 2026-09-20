@@ -1,6 +1,6 @@
 # ⚡ Fortnite: Save the World - Backpack & Storage Optimizer
 
-[![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-Live%20Demo-brightgreen?logo=github)](https://https://ta-radiant.github.io/FN-STW-Backpack/)
+[![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-Live%20Demo-brightgreen?logo=github)](https://ta-radiant.github.io/FN-STW-Backpack/)
 [![Pure Client-Side](https://img.shields.io/badge/Web-100%25%20Client--Side-00d2ff?logo=javascript)](docs/index.html)
 [![WebAssembly](https://img.shields.io/badge/Solver-WebAssembly%20MILP-654ff0?logo=webassembly)](docs/js/optimizer.js)
 [![Java](https://img.shields.io/badge/Java-17%2B-orange?logo=openjdk)](pom.xml)
