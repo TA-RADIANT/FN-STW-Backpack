@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fortnite: STW - Backpack & Storage Optimizer</title>
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+</head>
+<body>
+
+    <!-- Top App Header -->
+    <header class="app-header">
+        <div class="header-left">
+            <h1>⚡ Fortnite: Save the World - Backpack & Storage Optimizer</h1>
+            <p>Mixed-Integer Linear Programming (MILP) Storage Compression Engine • Maximizes Saved Inventory Slots</p>
+        </div>
+        <div class="header-right">
+            <span class="badge-version">v1.0 • Web Edition</span>
+            <span class="badge-version">Pure Client-Side</span>
+        </div>
+    </header>
+
+    <!-- 3-Column Layout -->
+    <main class="optimizer-container">
+
+        <!-- Column 1: Raw Materials Input -->
+        <section class="panel-card">
+            <div class="panel-header">
+                <h2>1. Raw Materials (Max 999/slot)</h2>
+            </div>
+
+            <!-- Profile Selector -->
+            <div class="profile-row">
+                <label for="materialProfileSelect">Profile:</label>
+                <select id="materialProfileSelect">
+                    <option value="">-- Select Inventory Profile --</option>
+                </select>
+                <button id="saveProfileBtn" class="btn-primary" title="Save current quantities as a custom profile">Save...</button>
+                <button id="deleteProfileBtn" class="btn-danger" title="Delete selected custom profile">Delete</button>
+            </div>
+
+            <!-- 12 Materials Table -->
+            <div class="materials-list-container">
+                <table class="materials-table">
+                    <thead>
+                        <tr>
+                            <th>Material</th>
+                            <th class="center">999 Stacks</th>
+                            <th class="center">+ Remainder</th>
+                            <th class="right">Total (Slots)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="materialsTableBody">
+                        <!-- Rendered dynamically by app.js -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Bottom Stats -->
+            <div class="stats-box">
+                <div class="stats-label">Total Materials:</div>
+                <div class="stats-val" id="totalItemsStat">0 items</div>
+                <div class="stats-label">Backpack Slots Used:</div>
+                <div class="stats-val highlight" id="totalSlotsStat">0 slots</div>
+            </div>
+
+            <!-- Quick Action Buttons -->
+            <div class="panel-actions">
+                <button id="clearMatsBtn" class="btn-secondary">Clear All</button>
+                <button id="randomMatsBtn" class="btn-primary">Set Random Data</button>
+            </div>
+        </section>
+
+        <!-- Column 2: Trap Preference Weights -->
+        <section class="panel-card">
+            <div class="panel-header">
+                <h2>2. Trap Preference Weights (0 - 10)</h2>
+            </div>
+
+            <!-- Preset Selector -->
+            <div class="profile-row">
+                <label for="trapPresetSelect">Presets:</label>
+                <select id="trapPresetSelect">
+                    <option value="">-- Quick Adjustment Presets --</option>
+                    <option value="all_5">Balanced (All Weights = 5)</option>
+                    <option value="all_10">Max Crafting (All Weights = 10)</option>
+                    <option value="damage">Damage Traps Heavy (Walls & Ceilings)</option>
+                    <option value="floor_heavy">Floor Traps Heavy</option>
+                </select>
+            </div>
+
+            <!-- 18 Traps Alphabetical List -->
+            <div class="traps-list-container" id="trapsListContainer">
+                <!-- Rendered dynamically by app.js -->
+            </div>
+        </section>
+
+        <!-- Column 3: Optimization & Storage Results -->
+        <section class="panel-card results-panel">
+            <div class="panel-header">
+                <h2>3. Optimization & Storage Results</h2>
+            </div>
+
+            <!-- Large Action Button -->
+            <button id="optimizeBtn" class="btn-large">⚡ OPTIMIZE STORAGE</button>
+
+            <!-- 4 Metric Cards -->
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-card-title">Before</div>
+                    <div class="metric-card-val warning" id="metricBefore">-</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-card-title">After</div>
+                    <div class="metric-card-val accent" id="metricAfter">-</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-card-title">Saved</div>
+                    <div class="metric-card-val success" id="metricSaved">-</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-card-title">Reduction</div>
+                    <div class="metric-card-val success" id="metricReduction">-</div>
+                </div>
+            </div>
+
+            <!-- Tabs: Traps to Craft & Leftovers -->
+            <div class="tabs-header">
+                <button class="tab-btn active" id="tabTrapsBtn">Traps to Craft</button>
+                <button class="tab-btn" id="tabMatsBtn">Leftover Materials</button>
+            </div>
+
+            <!-- Tab 1: Traps Table -->
+            <div class="tab-content active" id="tabTrapsContent">
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>Trap Name</th>
+                            <th class="center">Category</th>
+                            <th class="center">Craft Qty</th>
+                            <th class="right">Slots (200/sl)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="trapsTableBody">
+                        <tr>
+                            <td colspan="4" class="center" style="color:var(--text-muted); padding: 24px;">
+                                Ready. Enter your material counts and click Optimize Storage.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Tab 2: Leftovers Table -->
+            <div class="tab-content" id="tabMatsContent">
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>Material</th>
+                            <th class="center">Remaining</th>
+                            <th class="center">Slots (999/sl)</th>
+                            <th class="right">Consumed</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leftoversTableBody">
+                        <tr>
+                            <td colspan="4" class="center" style="color:var(--text-muted); padding: 24px;">
+                                Ready. Enter your material counts and click Optimize Storage.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Bottom Status Bar & Copy Button -->
+            <div class="status-bar">
+                <span id="statusText">Ready. Enter material counts and click Optimize Storage.</span>
+                <button id="copySummaryBtn" class="btn-secondary">Copy Summary</button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Scripts: Offline local solver first, with fallback to CDN -->
+    <script src="js/solver.js"></script>
+    <script>
+        // Fallback to CDN if local solver.js fails to load
+        if (typeof solver === 'undefined') {
+            document.write('<script src="https://cdn.jsdelivr.net/npm/javascript-lp-solver@0.4.24/prod/solver.js"><\/script>');
+        }
+    </script>
+    <script src="js/recipes.js"></script>
+    <script src="js/optimizer.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
